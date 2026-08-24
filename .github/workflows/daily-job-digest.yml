@@ -1,0 +1,47 @@
+name: Daily LMSW Job Digest
+
+on:
+  schedule:
+    # 9:00 PM America/New_York during Daylight Saving Time (EDT, UTC-4) -> 01:00 UTC next day
+    - cron: '0 1 * * *'
+    # 9:00 PM America/New_York during Standard Time (EST, UTC-5) -> 02:00 UTC next day
+    - cron: '0 2 * * *'
+  workflow_dispatch: {}   # lets you manually trigger a run from the Actions tab
+
+permissions:
+  contents: write   # needed so the workflow can commit the updated sent_jobs.db
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run job finder
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
+          SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
+          SEND_EMPTY_DIGEST: ${{ secrets.SEND_EMPTY_DIGEST }}
+          # Manual "Run workflow" clicks always run immediately; only the
+          # scheduled cron triggers respect the 9pm time gate.
+          SKIP_TIME_GATE: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
+        run: python lmsw_job_finder.py
+
+      - name: Commit updated dedup database
+        run: |
+          git config user.name "lmsw-job-finder-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add sent_jobs.db
+          git diff --staged --quiet || git commit -m "Update sent_jobs.db [skip ci]"
+          git push

@@ -1,0 +1,5 @@
+.env
+job_finder.log
+venv/
+__pycache__/
+*.pyc
