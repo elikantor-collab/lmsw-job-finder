@@ -483,10 +483,11 @@ def main() -> int:
     log("LMSW Job Finder v2 run starting")
 
     now_local = datetime.now(ZoneInfo(LOCAL_TZ))
-    if not SKIP_TIME_GATE and now_local.hour != TARGET_HOUR_LOCAL:
-        log(f"Local time is {now_local.strftime('%H:%M %Z')}, not the target hour "
-            f"({TARGET_HOUR_LOCAL}:00) — skipping this run (expected for one of "
-            f"the two daily cron triggers).")
+    if not SKIP_TIME_GATE and not (TARGET_HOUR_LOCAL <= now_local.hour <= TARGET_HOUR_LOCAL + 2):
+        log(f"Local time is {now_local.strftime('%H:%M %Z')}, outside the target "
+            f"window ({TARGET_HOUR_LOCAL}:00–{TARGET_HOUR_LOCAL + 2}:59) — skipping "
+            f"this run (expected for one of the two daily cron triggers, or if "
+            f"GitHub delayed the scheduled trigger).")
         return 0
 
     if not (GMAIL_USER and GMAIL_APP_PASSWORD):
