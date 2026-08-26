@@ -3,9 +3,9 @@ name: Daily LMSW Job Digest
 on:
   schedule:
     # 9:00 PM America/New_York during Daylight Saving Time (EDT, UTC-4) -> 01:00 UTC next day
-    - cron: '0 1 * * *'
+    - cron: '7 1 * * *'
     # 9:00 PM America/New_York during Standard Time (EST, UTC-5) -> 02:00 UTC next day
-    - cron: '0 2 * * *'
+    - cron: '7 2 * * *'
   workflow_dispatch: {}   # lets you manually trigger a run from the Actions tab
 
 permissions:
