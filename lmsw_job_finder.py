@@ -65,7 +65,11 @@ SKIP_TIME_GATE = os.getenv("SKIP_TIME_GATE", "false").lower() == "true"
 
 # Broader queries — these catch roles titled "Social Worker", "Therapist",
 # "Behavioral Health Clinician", etc. whose descriptions require LMSW.
-# The strict post-filter (KW_LMSW) keeps non-LMSW roles out of the digest.
+# Sent to SerpAPI/Google Jobs (which already aggregates Indeed, LinkedIn,
+# ZipRecruiter, Glassdoor, SimplyHired, Idealist, NASW Career Center,
+# GoodTherapy, TherapyDen, Health eCareers and other niche boards that
+# publish structured job-posting data) plus the direct scrapers below.
+# The post-filter (KW_LMSW / KW_GENERIC_CLINICAL) keeps the inbox clean.
 SEARCH_QUERIES = [
     "LMSW remote New York",
     "Licensed Master Social Worker remote New York",
@@ -74,15 +78,52 @@ SEARCH_QUERIES = [
     "remote therapist LMSW",
     "telehealth therapist New York MSW",
     "remote behavioral health clinician New York LMSW",
+    # Added Sep 2026:
+    "psychotherapist remote New York LMSW",
+    "remote psychotherapist LMSW",
+    "clinical social worker remote New York",
+    "MSW remote New York",
+    "remote mental health therapist New York LMSW",
+    "telehealth social worker New York",
+    "remote counselor LMSW New York",
+    "virtual therapist LMSW New York",
+    "remote LMSW LCSW LMHC LMFT New York",
 ]
 
+# Explicit credential mentions — the "strong signal" tier.
 KW_LMSW = [
     "lmsw",
     "licensed master social worker",
     "master of social work",
     "msw, lmsw",
     "msw/lmsw",
+    # Added Sep 2026 — more phrasings of the same credential:
+    "msw",
+    "m.s.w.",
+    "masters in social work",
+    "master's in social work",
+    "master's-level social worker",
+    "masters-level social worker",
 ]
+
+# Generic clinical-role titles — only used when STRICT_LMSW_MATCH=false.
+# These alone don't guarantee LMSW-eligibility (a posting titled just
+# "Therapist" could require LMFT/LMHC/PsyD instead), so this is an
+# opt-in, higher-recall/lower-precision mode. Set the repo secret/env var
+# STRICT_LMSW_MATCH=false to enable.
+KW_GENERIC_CLINICAL = [
+    "psychotherapist",
+    "therapist",
+    "clinical social worker",
+    "behavioral health clinician",
+    "behavioral health counselor",
+    "mental health clinician",
+    "mental health therapist",
+    "mental health counselor",
+    "counselor",
+]
+STRICT_LMSW_MATCH = os.getenv("STRICT_LMSW_MATCH", "true").lower() == "true"
+
 KW_REMOTE = ["remote", "work from home", "wfh", "telehealth", "virtual", "telework"]
 KW_NY = ["new york", " ny", "nyc", "new-york"]
 
@@ -399,6 +440,8 @@ def matches_criteria(job: dict) -> bool:
     ])
 
     has_lmsw = any(k in haystack for k in KW_LMSW)
+    if not has_lmsw and not STRICT_LMSW_MATCH:
+        has_lmsw = any(k in haystack for k in KW_GENERIC_CLINICAL)
     if not has_lmsw:
         return False
 

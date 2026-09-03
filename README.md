@@ -74,6 +74,32 @@ If LinkedIn/Indeed coverage matters a lot to you, leaning more on SerpAPI
 Google Jobs) is the more cloud-reliable path — worth watching the first
 couple weeks of runs to see how much it actually affects results.
 
+## September 2026 update
+
+Broadened coverage per request:
+- Added more search-query phrasings (`psychotherapist`, `clinical social
+  worker`, `MSW`, `remote counselor`, etc.) so more boards surface through
+  SerpAPI/Google Jobs, which already aggregates Indeed, LinkedIn,
+  ZipRecruiter, Glassdoor, SimplyHired, Idealist, NASW Career Center,
+  GoodTherapy, TherapyDen, and Health eCareers (any board that publishes
+  structured job-posting markup gets picked up automatically — no
+  per-site scraper needed).
+- Added more phrasings of the LMSW credential itself to the match filter
+  (`msw`, `m.s.w.`, `master's in social work`, etc.).
+- New optional `STRICT_LMSW_MATCH` secret/env var (default `true`, same
+  behavior as before — require an explicit LMSW/MSW mention). Set it to
+  `false` if you want to also catch generic postings titled just
+  "Therapist" / "Psychotherapist" / "Clinical Social Worker" that never
+  spell out "LMSW" — trade-off is more noise from LMFT/LMHC-only roles.
+
+Also worth knowing: your SerpAPI account ran out of its monthly free-tier
+searches partway through this run's investigation, and both Indeed and
+LinkedIn were returning 403s / connection resets on direct scraping around
+the same time. That's an external, day-to-day thing (SerpAPI quota resets
+monthly; Indeed/LinkedIn bot-blocking comes and goes) rather than a bug —
+if you notice several days in a row with no email at all, check the
+Actions run logs for these before assuming something's broken.
+
 ## Files in this repo
 
 | File | Purpose |
